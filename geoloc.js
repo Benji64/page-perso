@@ -28,9 +28,12 @@ function processRequestv() {
  if (xhrv.readyState == 4 && xhrv.status == 200) {
    //alert(xhrv.responseText);
    var responsev = JSON.parse(xhrv.responseText);
-   return ville = responsev.city;
-   return lat = responsev.lat;
-   return lon = responsev.lon;
+   // you should not "return" anything inside that function; 
+   // what you want is set the ville/lat/lon variable
+   // when you return inside a function it goes out and don't execut the rest of the code below
+   /* return */ ville = responsev.city;
+   /* return */ lat = responsev.lat;
+   /* return */ lon = responsev.lon;
  }
 }
 // fin json donnee geoloc ip
@@ -47,8 +50,9 @@ function processRequestm() {
  if (xhrm.readyState == 4 && xhrm.status == 200) {
    //alert(xhrm.responseText);
    var responsem = JSON.parse(xhrm.responseText);
-   return temp = responsem.temp;
-   return description = responsem.description;
+   /* return */ temp = responsem.temp;
+   /* return */ description = responsem.description;
+   // same here 
  }
 }
 
