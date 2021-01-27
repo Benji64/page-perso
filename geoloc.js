@@ -28,9 +28,12 @@ function processRequestv() {
  if (xhrv.readyState == 4 && xhrv.status == 200) {
    //alert(xhrv.responseText);
    var responsev = JSON.parse(xhrv.responseText);
-   return ville = responsev.city;
-   return lat = responsev.lat;
-   return lon = responsev.lon;
+   // you should not "return" anything inside that function; 
+   // what you want is set the ville/lat/lon variable
+   // when you return inside a function it goes out and don't execut the rest of the code below
+   /* return */ ville = responsev.city;
+   /* return */ lat = responsev.lat;
+   /* return */ lon = responsev.lon;
  }
 }
 // fin json donnee geoloc ip
@@ -47,8 +50,9 @@ function processRequestm() {
  if (xhrm.readyState == 4 && xhrm.status == 200) {
    //alert(xhrm.responseText);
    var responsem = JSON.parse(xhrm.responseText);
-   return temp = responsem.temp;
-   return description = responsem.description;
+   /* return */ temp = responsem.temp;
+   /* return */ description = responsem.description;
+   // same here 
  }
 }
 
@@ -66,14 +70,62 @@ function initMap() {
         maxZoom: 20
     }).addTo(macarte);
 }
+
 window.onload = function(){
-// Fonction d'initialisation qui s'exécute lorsque le DOM est chargé
-initMap();
-// Nous définissons le dossier qui contiendra les marqueurs
-var iconBase = 'image/autres.png';
-// Nous ajoutons un marqueur  [ville,responsem,temp,description]
-var markervs = L.marker([lat, lon]).addTo(macarte);
-markervs.bindPopup(ville);
-var markerOn = L.marker([43.55852311511972, -1.4443478000000076]).addTo(macarte);
-markerOn.bindPopup('ondres');
+  // Fonction d'initialisation qui s'exécute lorsque le DOM est chargé
+  initMap();
+  // Nous définissons le dossier qui contiendra les marqueurs
+  var iconBase = 'image/autres.png';
+
+  // The problem here is that variable lat/lon/ville may not be already set
+  // since you're calling an API you can't know for sure the result is already there or not. 
+  // What I suggest is to make the call here for the data you need from the API 
+  // and when you've received everything you add it to the map in a new marker
+  fetchUserIp().then(userIp => {
+    console.log(userIp)
+    fetchCityCoordinates(userIp).then(city => {
+      console.log(city)
+
+        // Nous ajoutons un marqueur  [ville,responsem,temp,description]
+        var markervs = L.marker([city.lat, city.lon]).addTo(macarte);
+        markervs.bindPopup(city.name);
+
+        // you could call the weather API also before adding the marker to the map
+    })
+  })
+
+
+  // var markerOn = L.marker([43.55852311511972, -1.4443478000000076]).addTo(macarte);
+  // markerOn.bindPopup('ondres');
+}
+
+// When you call an API you have to handle the response time of the server
+// In the past it was handled by callback (you had to send in your method parameter the other method to call when the result of your api was received)
+// then we started using Promises
+// and now it's also possible to use async/await which tends to produce a code easier to read IMO
+// https://www.loginradius.com/blog/async/callback-vs-promises-vs-async-await/
+async function fetchUserIp(){
+  const response = await fetch('https://api.ipify.org/?format=json')
+  if(response.ok){
+    const json = await response.json()
+    return json.ip;
+  } else {
+    // do something..
+    console.error("Error fetching the ip...")
+  }
+}
+
+async function fetchCityCoordinates(ip){
+  const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query`)
+  if(response.ok){
+    const json = await response.json()
+    return {
+      name: json.city,
+      lat: json.lat,
+      lon: json.lon
+    }
+  } else {
+    // do something..
+    console.error("Error fetching the city...")
+  }
 }
